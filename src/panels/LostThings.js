@@ -1,8 +1,9 @@
 import React from 'react';
 import * as UI from '@vkontakte/vkui';
-import $ from 'jquery'
+import $ from 'jquery';
 import {Panel, PanelHeader} from '@vkontakte/vkui-connect';
 import AddLostThing from './AddLostThing';
+import MapContainer from "./MapContainer";
 
 
 class LostThings extends React.Component {
@@ -32,6 +33,10 @@ class LostThings extends React.Component {
     goToAddLostThing() {
         return this.setState({activePanel: 'addThing'})
     }
+
+    go = (e) => {
+        this.setState({ activePanel: e.currentTarget.dataset.to })
+    };
 
     //элемент листа потерянной вещи
     printLostThingInfo(thing) {
@@ -64,7 +69,8 @@ class LostThings extends React.Component {
                         {this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
                     </UI.Panel>
                 </UI.View>
-                <AddLostThing id = "addThing"/>
+                <AddLostThing id = "addThing" go = {this.go}/>
+                <MapContainer id = "map" go = {this.go}/>
             </UI.Root>
         );
     }
