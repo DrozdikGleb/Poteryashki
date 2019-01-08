@@ -28,6 +28,7 @@ class MapContainer extends React.Component {
     }
 
     onSuggestSelect = (place: Suggest) => {
+        if (place == null) return;
         const {
             location: {lat, lng}
         } = place;
@@ -43,10 +44,10 @@ class MapContainer extends React.Component {
             <UI.Root activeView={this.state.activePanel}>
                 <UI.View id="map" activePanel="map">
                     <UI.Panel id='map'>
-                        <UI.PanelHeader key="map" left={<UI.HeaderButton onClick={this.props.go
-                        } data-to="addThing">{<Icon24Back/>}</UI.HeaderButton>}>Карта</UI.PanelHeader>
+                        <UI.PanelHeader key="map" left={<UI.HeaderButton onClick={() => {this.props.go(this.state.lat, this.state.lng)}
+                        } >{<Icon24Back/>}</UI.HeaderButton>}>Карта</UI.PanelHeader>
                         <Geosuggest
-                            placeholder="Start typing!"
+                            placeholder="Место, где потеряна вещь!"
                             onSuggestSelect={this.onSuggestSelect}
                             location={new google.maps.LatLng(53.558572, 9.9278215)}
                             radius={20}

@@ -19,10 +19,7 @@ class MainScreen extends Component {
 
         return (
             <UI.Panel id={this.props.id}>
-                <UI.PanelHeader>
-                    Потеряшки
-                </UI.PanelHeader>
-                <EpicContainer/>
+                <EpicContainer userId = {this.props.userId} goMain = {this.props.goMain}/>
             </UI.Panel>
         );
     }

@@ -16,7 +16,7 @@ class FoundThings extends React.Component {
             <UI.Root activeView={this.state.activePanel}>
                 <UI.View id="found" activePanel="found">
                     <UI.Panel id='found'>
-                        <UI.PanelHeader noShadow>Found</UI.PanelHeader>
+                        <UI.PanelHeader noShadow>Найдёныши</UI.PanelHeader>
                     </UI.Panel>
                 </UI.View>
             </UI.Root>

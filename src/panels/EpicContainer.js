@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import '@vkontakte/vkui/dist/vkui.css';
 import Icon24Notification from '@vkontakte/icons/dist/24/notification';
+import Icon24Filter from '@vkontakte/icons/dist/24/filter';
+import Icon24Education from '@vkontakte/icons/dist/24/education';
 import {
     View, Panel, PanelHeader,
     TabbarItem, Epic, Tabbar, HorizontalScroll,
@@ -9,6 +11,7 @@ import {
 } from '@vkontakte/vkui';
 import LostThings from "./LostThings";
 import FoundThings from "./FoundThings";
+import Filter from "./Filter";
 
 class EpicContainer extends Component {
     constructor(props) {
@@ -39,14 +42,19 @@ class EpicContainer extends Component {
                     ><Icon24Notification/></TabbarItem>
                     <TabbarItem
                         onClick={this.onStoryChange}
+                        selected={this.state.activeStory === 'filter'}
+                        data-story="filter"
+                    ><Icon24Filter/></TabbarItem>
+                    <TabbarItem
+                        onClick={this.onStoryChange}
                         selected={this.state.activeStory === 'found'}
                         data-story="found"
-                    ><Icon24Notification/></TabbarItem>
+                    ><Icon24Education/></TabbarItem>
                 </Tabbar>
             }>
-                <LostThings id="lost"/>
+                <LostThings id="lost" userId = {this.props.userId} goMain = {this.props.goMain}/>
                 <FoundThings id="found"/>
-
+                <Filter id="filter"/>
             </Epic>
         )
     }
