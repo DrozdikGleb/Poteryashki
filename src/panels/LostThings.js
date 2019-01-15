@@ -21,6 +21,7 @@ class LostThings extends React.Component {
             activePanel: "lost",
             lost_array: [],
             lostThingInfo: null,
+            placeName: null,
             pressId: 0
 
         };
@@ -34,7 +35,7 @@ class LostThings extends React.Component {
     getAllLostThings() {
         $.ajax(
             {
-                url: 'http://degi.shn-host.ru/lostthings/getAllLostThings.php',
+                url: 'https://degi.shn-host.ru/lostthings/getAllLostThings.php',
                 type: 'GET',
                 dataType: "json"
             }
@@ -44,9 +45,10 @@ class LostThings extends React.Component {
         }.bind(this));
     };
 
-    goToAddLostThing(lat, lng) {
+    goToAddLostThing(lat, lng, placeName) {
         this.state.lat = lat;
         this.state.lng = lng;
+        this.state.placeName = placeName;
         return this.setState({activePanel: 'addThing'})
     }
 
@@ -65,6 +67,10 @@ class LostThings extends React.Component {
 
     go = (e) => {
         this.setState({activePanel: e.currentTarget.dataset.to})
+    };
+
+    setPanel = (name) => {
+        this.setState({activePanel: name})
     };
 
     //элемент листа потерянной вещи
@@ -94,30 +100,36 @@ class LostThings extends React.Component {
 
     render() {
         return (
-            <UI.Root activeView={this.state.activePanel}>
-                <UI.View id="lost" activePanel="lost">
-                    <UI.Panel id='lost'>
-                        <UI.PanelHeader key="addThing" left={<UI.HeaderButton onClick={this.props.go
-                        } data-to="panelChoose">{<Icon24Back/>}</UI.HeaderButton>}
-                                        right={<UI.HeaderButton onClick={() => this.goToAddLostThing()}>
-                                            Добавить потеряшку
-                                        </UI.HeaderButton>}>
-                            Потеряшки
-                        </UI.PanelHeader>
-                        <UI.Search/>
-                        <UI.Button level="commerce" onClick={() => this.goToAllLostOnMap()}>
-                            Все потеряшки на карте
-                        </UI.Button>
-                        {this.state.lost_array && this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
-                    </UI.Panel>
-                </UI.View>
-                <AddLostThing id="addThing" go={this.go} lat={this.state.lat} lng={this.state.lng}
+            <UI.View activePanel={this.state.activePanel}>
+                <UI.Panel id='lost'>
+                    <UI.PanelHeader key="panelHeaderLost"
+                                    left={<UI.HeaderButton onClick={this.props.goMain} data-to="mainView">{
+                                        <Icon24Back/>}</UI.HeaderButton>}
+                    >
+                        Потеряшки
+                    </UI.PanelHeader>
+                    <UI.Group>
+                        <UI.Cell before={<UI.Button level="commerce" onClick={() => this.goToAddLostThing()}>
+                            Добавить потеряшку
+                        </UI.Button>}
+                                 asideContent={<UI.Button level="commerce" onClick={() => this.goToAllLostOnMap()}>
+                                     Все потеряшки на карте
+                                 </UI.Button>}>
+                        </UI.Cell>
+                    </UI.Group>
+                    <UI.Search/>
+                    {this.state.lost_array && this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
+                </UI.Panel>
+                <AddLostThing id="addThing" setPanel={this.setPanel} lat={this.state.lat} lng={this.state.lng}
+                              placeName={this.state.placeName}
                               userId={this.props.userId}/>
                 <MapContainer id="map" go={this.goToAddLostThing}/>
                 <MoreInfo id="moreInfo" idThing={this.state.pressId} go={this.go}/>
                 <OnMapThing id="onMap" uID={this.state.pressId} lostThingInfo={this.state.lostThingInfo} go={this.go}/>
-                <AllOnMap id="allOnMap" go={this.go} lostArray={this.state.lost_array}/>
-            </UI.Root>
+                <AllOnMap id="allOnMap" setPanel={this.setPanel} lostArray={this.state.lost_array}/>
+            </UI.View>
+
+
         );
     }
 }

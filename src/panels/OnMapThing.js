@@ -29,7 +29,7 @@ class OnMapThing extends React.Component {
     componentDidMount() {
         $.ajax(
             {
-                url: 'http://degi.shn-host.ru/lostthings/getLostThing.php',
+                url: 'https://degi.shn-host.ru/lostthings/getLostThing.php',
                 type: 'POST',
                 dataType: "json",
                 data: {
@@ -40,28 +40,24 @@ class OnMapThing extends React.Component {
             //console.log(data['result'][0]['lat'])
             this.state.lat = parseFloat(data['result'][0]['lat']);
             this.state.lng = parseFloat(data['result'][0]['lng']);
-            this.state.fetchInProgress = false;
+            this.setState({fetchInProgress: false});
         }.bind(this));
     }
 
     render() {
         return (
-            <UI.Root activeView={this.state.activePanel}>
-                <UI.View id="onMap" activePanel="onMap">
-                    <UI.Panel id='onMap'>
-                        <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={this.props.go
-                        } data-to="lost">{<Icon24Back/>}</UI.HeaderButton>}>Потеряшка на карте</UI.PanelHeader>
-                        {this.state.fetchInProgress && <UI.ScreenSpinner/>}
-                        {this.state.lat && <MyMapComponent
-                            isMarkerShown
-                            containerElement={<div style={{height: `100vh`}}/>}
-                            mapElement={<div style={{height: `100%`}}/>}
-                            lat={this.state.lat}
-                            lng={this.state.lng}
-                        />}
-                    </UI.Panel>
-                </UI.View>
-            </UI.Root>
+            <UI.Panel id='onMap'>
+                <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={this.props.go
+                } data-to={this.props.from === "myAds" ? "myAds" : "lost"}>{<Icon24Back/>}</UI.HeaderButton>}>Потеряшка на карте</UI.PanelHeader>
+                {this.state.fetchInProgress && <UI.ScreenSpinner/>}
+                {this.state.lat && <MyMapComponent
+                    isMarkerShown
+                    containerElement={<div style={{height: `100vh`}}/>}
+                    mapElement={<div style={{height: `100%`}}/>}
+                    lat={this.state.lat}
+                    lng={this.state.lng}
+                />}
+            </UI.Panel>
         )
     }
 }

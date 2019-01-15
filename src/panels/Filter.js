@@ -45,10 +45,10 @@ class Filter extends React.Component {
     makeFilterRequest() {
         $.ajax(
             {
-                url: 'http://degi.shn-host.ru/lostthings/filterByLost.php',
+                url: 'https://degi.shn-host.ru/lostthings/filterByLost.php',
                 type: 'POST',
                 dataType: "json",
-                data : {
+                data: {
                     category: this.state.thingInfo.category,
                 }
             }
@@ -76,21 +76,20 @@ class Filter extends React.Component {
 
     render() {
         return (
-            <UI.Root activeView={this.state.activePanel}>
-                <UI.View id="filter" activePanel="filter">
-                    <UI.Panel id='filter'>
-                        <UI.PanelHeader noShadow>Фильтр</UI.PanelHeader>
-                        <UI.FormLayout>
+            <UI.View activePanel={this.state.activePanel}>
+                <UI.Panel id='filter'>
+                    <UI.PanelHeader noShadow>Фильтр</UI.PanelHeader>
+                    <UI.FormLayout>
                         <UI.Select top="Категория" placeholder="Выберите категорию"
                                    value={this.state.thingInfo.category}
-                                   name = "category"
-                                   onChange = {this.onInputChange}
-                                   >
+                                   name="category"
+                                   onChange={this.onInputChange}
+                        >
                             <option value="одежда">Одежда</option>
                             <option value="люди">Люди</option>
                             <option value="документы">Документы</option>
                         </UI.Select>
-                            <UI.Div align = "center">
+                        <UI.Div align="center">
                             <DatePicker
                                 selected={this.state.startDate}
                                 onChange={this.handleDataChange}
@@ -99,18 +98,17 @@ class Filter extends React.Component {
                                 dateFormat="d MMMM yyyy"
                                 timeCaption="Время"
                             />
-                            </UI.Div>
-                            <UI.Checkbox>Рядом со мной</UI.Checkbox>
-                            <UI.Div align = "center">
-                            <UI.Button onClick = {() => this.makeFilterRequest()}>
+                        </UI.Div>
+                        <UI.Checkbox>Рядом со мной</UI.Checkbox>
+                        <UI.Div align="center">
+                            <UI.Button onClick={() => this.makeFilterRequest()}>
                                 Показать
                             </UI.Button>
-                            </UI.Div>
-                        </UI.FormLayout>
-                        {this.state.lost_array && this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
-                    </UI.Panel>
-                </UI.View>
-            </UI.Root>
+                        </UI.Div>
+                    </UI.FormLayout>
+                    {this.state.lost_array && this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
+                </UI.Panel>
+            </UI.View>
         )
     }
 }

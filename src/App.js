@@ -2,14 +2,16 @@ import React, {Component} from 'react';
 import * as UI from '@vkontakte/vkui';
 import connect from '@vkontakte/vkui-connect';
 import '@vkontakte/vkui/dist/vkui.css';
-import MainScreen from './panels/MainScreen';
+import LostScreenMain from "./panels/LostScreenMain";
+import LostThings from "./panels/LostThings";
+import FoundScreenMain from "./panels/FoundScreenMain";
 
 class App extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            activePanel: 'panelChoose',
+            activeView: 'mainView',
             fetchedUser: null
         };
     }
@@ -27,8 +29,12 @@ class App extends Component {
         connect.send('VKWebAppGetUserInfo', {});
     }
 
-    goMain = (e) => {
-        this.setState({activePanel: e.currentTarget.dataset.to})
+    go = (e) => {
+        this.setState({activeView: e.currentTarget.dataset.to})
+    };
+
+    goToMain = (e) => {
+        this.setState({activeView: e.currentTarget.dataset.to})
     };
 
     render() {
@@ -36,8 +42,8 @@ class App extends Component {
         // TODO Сделать две панели для потеряшек и найдёнышей
         return (
             <UI.ConfigProvider insets={this.props.insets}>
-                <UI.Root activeView="mainView">
-                    <UI.View id="mainView" activePanel={this.state.activePanel}>
+                <UI.Root activeView={this.state.activeView}>
+                    <UI.View id="mainView" activePanel="panelChoose">
                         <UI.Panel id="panelChoose">
                             <UI.PanelHeader>Выбор роли</UI.PanelHeader>
                             {this.state.fetchedUser &&
@@ -56,25 +62,34 @@ class App extends Component {
                                 </UI.Div>
                                 <UI.Div>
                                     <UI.Button level="commerce" size="xl"
-                                               onClick={() => {this.setState({activePanel: "mainScreen"})}}>
+                                               onClick={() => {
+                                                   this.setState({activeView: "lost"});
+                                               }
+                                               }>
                                         Потеряшки
                                     </UI.Button>
                                 </UI.Div>
                                 <UI.Div>
                                     <UI.Button level="commerce" size="xl"
-                                               onClick={() => {this.setState({activePanel: "mainScreen"})}}>
+                                               onClick={() => {
+                                                   this.setState({activeView: "found"});
+                                               }}>
                                         Найдёныши
                                     </UI.Button>
                                 </UI.Div>
                             </UI.Group>
                         </UI.Panel>
-                        <MainScreen id="mainScreen" goMain = {this.goMain} accessToken={this.props.accessToken}
-                                    userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
                     </UI.View>
+                    <LostScreenMain id="lost" goMain={this.goToMain}
+                                    userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
+                    <FoundScreenMain id="found" goMain={this.goToMain}
+                                    userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
+
                 </UI.Root>
             </UI.ConfigProvider>
         );
     }
 }
+
 
 export default App;

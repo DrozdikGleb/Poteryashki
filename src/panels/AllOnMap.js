@@ -13,8 +13,10 @@ const MyMapComponent = withGoogleMap((props) =>
     >
         {props.isMarkerShown && props.markers.map(marker => (
             <Marker
-                position={{ lat: parseFloat(marker.lat), lng: parseFloat(
-                    marker.lng) }}
+                position={{
+                    lat: parseFloat(marker.lat), lng: parseFloat(
+                        marker.lng)
+                }}
                 key={marker._id}
             />
         ))}
@@ -33,28 +35,24 @@ class AllOnMap extends React.Component {
     }
 
     componentWillMount() {
-       this.state.fetchInProgress = false;
+        this.state.fetchInProgress = false;
         this.state.lat = this.props.lostArray[0]['lat'];
         console.log(this.state.lat);
     }
 
     render() {
         return (
-            <UI.Root activeView={this.state.activePanel}>
-                <UI.View id="allOnMap" activePanel="allOnMap">
-                    <UI.Panel id='allOnMap'>
-                        <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={this.props.go
-                        } data-to="lost">{<Icon24Back/>}</UI.HeaderButton>}>Все потеряшки на карте</UI.PanelHeader>
-                        {this.state.fetchInProgress && <UI.ScreenSpinner/>}
-                        {this.state.lat && <MyMapComponent
-                            isMarkerShown
-                            markers = {this.props.lostArray}
-                            containerElement={<div style={{height: `100vh`}}/>}
-                            mapElement={<div style={{height: `100%`}}/>}
-                        />}
-                    </UI.Panel>
-                </UI.View>
-            </UI.Root>
+            <UI.Panel id='allOnMap'>
+                <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={() => this.props.setPanel("lost")
+                }>{<Icon24Back/>}</UI.HeaderButton>}>Все потеряшки на карте</UI.PanelHeader>
+                {this.state.fetchInProgress && <UI.ScreenSpinner/>}
+                {this.state.lat && <MyMapComponent
+                    isMarkerShown
+                    markers={this.props.lostArray}
+                    containerElement={<div style={{height: `100vh`}}/>}
+                    mapElement={<div style={{height: `100%`}}/>}
+                />}
+            </UI.Panel>
         )
     }
 }

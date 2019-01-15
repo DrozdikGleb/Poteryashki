@@ -21,6 +21,7 @@ class AddLostThing extends React.Component {
             activePanel: "addThing",
             startDate: new Date(),
             image: null,
+            imageDownloaded: null,
             thingInfo: {
                 name: 'тук',
                 category: 'тук',
@@ -32,10 +33,28 @@ class AddLostThing extends React.Component {
         this.addLostThing = this.addLostThing.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
         this.handleDataChange = this.handleDataChange.bind(this);
+        this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this);
     }
 
     componentDidMount() {
+        this.hydrateStateWithLocalStorage();
 
+        // add event listener to save state to localStorage
+        // when user leaves/refreshes the page
+        window.addEventListener(
+            "beforeunload",
+            this.saveStateToLocalStorage.bind(this)
+        );
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener(
+            "beforeunload",
+            this.saveStateToLocalStorage.bind(this)
+        );
+
+        // saves if component has a chance to unmount
+        this.saveStateToLocalStorage();
     }
 
     addLostThing() {
@@ -51,7 +70,7 @@ class AddLostThing extends React.Component {
 
         $.ajax(
             {
-                url: 'http://degi.shn-host.ru/lostthings/addLostThing.php',
+                url: 'https://degi.shn-host.ru/lostthings/addLostThing.php',
                 type: 'POST',
                 contentType: false,
                 processData: false,
@@ -59,7 +78,7 @@ class AddLostThing extends React.Component {
             }
         ).done(function (data) {
             alert(data);
-        })
+        });
     }
 
     onInputChange(e) {
@@ -83,92 +102,125 @@ class AddLostThing extends React.Component {
         });
     }
 
-    selectFile(e) {
-        console.log(e.target.files);
-        this.state.image = e.target.files[0];
+    selectFile(event) {
+        console.log(event.target.files[0]);
+        this.state.image = event.target.files[0];
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            this.setState({imageDownloaded: e.target.result});
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    hydrateStateWithLocalStorage() {
+        for (let key in this.state) {
+            if (key === "imageDownloaded") continue;
+            if (localStorage.hasOwnProperty(key)) {
+
+                let value = localStorage.getItem(key);
+
+                try {
+                    value = JSON.parse(value);
+                    this.setState({[key]: value});
+                } catch (e) {
+                    this.setState({[key]: value});
+                }
+            }
+        }
+    }
+
+    saveStateToLocalStorage() {
+        for (let key in this.state) {
+            if (key === "imageDownloaded") continue;
+            localStorage.setItem(key, JSON.stringify(this.state[key]));
+        }
     }
 
 
     render() {
         return (
-            <UI.Root activeView={this.state.activePanel}>
-                <UI.View id="addThing" activePanel="addThing">
-                    <UI.Panel id='addThing'>
-                        <UI.PanelHeader key="addThing" left={<UI.HeaderButton onClick={this.props.go
-                        } data-to="lost">{<Icon24Back/>}</UI.HeaderButton>}>Добавление потеряшки</UI.PanelHeader>
-                        <UI.Group title="Информация">
-                            <UI.List>
-                                <UI.Cell><UI.InfoRow title="Название">
-                                    <UI.Input type="text" value={this.state.thingInfo.name}
-                                              name="name"
-                                              onChange={this.onInputChange}/>
-                                </UI.InfoRow></UI.Cell>
+            <UI.Panel id={this.props.id}>
+                <UI.PanelHeader key="addThing" left={<UI.HeaderButton onClick={() => {
+                    this.props.setPanel("lost");
+                }
+                }>{<Icon24Back/>}</UI.HeaderButton>}>Добавление потеряшки</UI.PanelHeader>
+                <UI.Group title="Информация">
+                    <UI.List>
+                        <UI.Cell><UI.InfoRow title="Название">
+                            <UI.Input type="text" value={this.state.thingInfo.name}
+                                      name="name"
+                                      onChange={this.onInputChange}/>
+                        </UI.InfoRow></UI.Cell>
 
-                                <UI.Cell><UI.InfoRow title="Категория"><UI.Select top="Категория"
-                                                                                  placeholder="Выберите категорию"
-                                                                                  value={this.state.thingInfo.category}
-                                                                                  name="category"
-                                                                                  onChange={this.onInputChange}>
-                                    <option value="одежда">Одежда</option>
-                                    <option value="люди">Люди</option>
-                                    <option value="документы">Документы</option>
-                                </UI.Select></UI.InfoRow></UI.Cell>
-                                <UI.Cell><UI.InfoRow title="Описание">
-                                    <UI.Textarea top="Комментарий" value={this.state.thingInfo.comments}
-                                                 name="comments" onChange={this.onInputChange}/>
-                                </UI.InfoRow></UI.Cell>
-                                <UI.Cell>
-                                    <UI.Avatar src="https://pp.userapi.com/c837122/v837122442/52e4a/YBw6FdAxcC8.jpg">
+                        <UI.Cell><UI.InfoRow title="Категория"><UI.Select top="Категория"
+                                                                          placeholder="Выберите категорию"
+                                                                          value={this.state.thingInfo.category}
+                                                                          name="category"
+                                                                          onChange={this.onInputChange}>
+                            <option value="одежда">Одежда</option>
+                            <option value="люди">Люди</option>
+                            <option value="документы">Документы</option>
+                        </UI.Select></UI.InfoRow></UI.Cell>
+                        <UI.Cell><UI.InfoRow title="Описание">
+                            <UI.Textarea top="Комментарий" value={this.state.thingInfo.comments}
+                                         name="comments" onChange={this.onInputChange}/>
+                        </UI.InfoRow></UI.Cell>
+                        <UI.Cell before={<UI.File input type="file" accept="image/*" capture top="Загрузите ваше фото"
+                                                  before={<Icon24Camera/>} size="l"
+                                                  onChange={this.selectFile.bind(this)}>
+                            Загрузить фото
+                        </UI.File>}
+                                 asideContent={<UI.Avatar type="image" src={this.state.imageDownloaded}/>}>
 
-                                    </UI.Avatar>
-                                    <UI.File input type="file" accept="image/*" capture top="Загрузите ваше фото"
-                                             before={<Icon24Camera/>} size="l"
-                                             onChange={this.selectFile.bind(this)}>
-                                        Загрузить фото
-                                    </UI.File>
-                                </UI.Cell>
 
-                            </UI.List>
-                        </UI.Group>
-                        <UI.Group title="Местоположение">
-                            <UI.Cell>
-                                <UI.Button onClick={this.props.go} data-to="map">
-                                    Указать на карте
-                                </UI.Button>
-                            </UI.Cell>
-                        </UI.Group>
-                        <UI.Group title="Дата и время" align="center">
-                            <UI.Cell >
-                                <Flatpickr
-                                    data-enable-time
-                                    options = {
-                                        {
-                                            maxDate:"today"
-                                        }
-                                    }
-                                    value={this.state.startDate}
-                                    onChange={date => { this.setState({date}) }}
-                                />
+                        </UI.Cell>
 
-                            </UI.Cell>
-                        </UI.Group>
-                        <UI.Group title="Контакты">
-                            <UI.FormLayout>
-                                <UI.Input type="phone" top="Телефон" value={this.state.thingInfo.phone}
-                                          name="phone"
-                                          onChange={this.onInputChange}/>
-                                <UI.Input type="email" top="E-mail"/>
-                                <UI.Checkbox>Связаться по ВК</UI.Checkbox>
-                            </UI.FormLayout>
-                        </UI.Group>
-                        <UI.Group>
-                            <UI.Button size="xl" level="commerce" onClick={() => this.addLostThing()}>
-                                Добавить
-                            </UI.Button>
-                        </UI.Group>
-                    </UI.Panel>
-                </UI.View>
-            </UI.Root>
+                    </UI.List>
+                </UI.Group>
+                <UI.Group title="Местоположение">
+                    <UI.Cell before={<UI.Button onClick={() => {
+                        this.props.setPanel("map");
+                    }}>
+                        Указать на карте
+                    </UI.Button>}
+                             asideContent={this.props.placeName && <UI.InfoRow title="Место потери">
+                                 {this.props.placeName}
+                             </UI.InfoRow>}>
+
+                    </UI.Cell>
+                </UI.Group>
+                <UI.Group title="Дата и время" align="center">
+                    <UI.Cell>
+                        <Flatpickr
+                            data-enable-time
+                            options={
+                                {
+                                    maxDate: "today"
+                                }
+                            }
+                            value={this.state.startDate}
+                            onChange={date => {
+                                this.setState({date})
+                            }}
+                        />
+
+                    </UI.Cell>
+                </UI.Group>
+                <UI.Group title="Контакты">
+                    <UI.FormLayout>
+                        <UI.Input type="phone" top="Телефон" value={this.state.thingInfo.phone}
+                                  name="phone"
+                                  onChange={this.onInputChange}/>
+                        <UI.Input type="email" top="E-mail"/>
+                        <UI.Checkbox>Связаться по ВК</UI.Checkbox>
+                    </UI.FormLayout>
+                </UI.Group>
+                <UI.Group>
+                    <UI.Button size="xl" level="commerce" onClick={() => this.addLostThing()}>
+                        Добавить
+                    </UI.Button>
+                </UI.Group>
+            </UI.Panel>
         )
     }
 }
