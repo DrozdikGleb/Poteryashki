@@ -2,15 +2,14 @@ import React, {Component} from 'react';
 import * as UI from '@vkontakte/vkui';
 import connect from '@vkontakte/vkui-connect';
 import '@vkontakte/vkui/dist/vkui.css';
-import LostScreenMain from "./panels/LostScreenMain";
-import LostThings from "./panels/LostThings";
-import FoundScreenMain from "./panels/FoundScreenMain";
+import MainScreen from "./panels/MainScreen";
 
 class App extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            coordinates:null,
             activeView: 'mainView',
             fetchedUser: null
         };
@@ -22,11 +21,15 @@ class App extends Component {
                 case 'VKWebAppGetUserInfoResult':
                     this.setState({fetchedUser: e.detail.data});
                     break;
+                case 'VKWebAppGeodataResult':
+                    this.setState({coordinates: e.detail.data});
+                    break;
                 default:
                     console.log(e.detail.type);
             }
         });
         connect.send('VKWebAppGetUserInfo', {});
+        connect.send("VKWebAppGetGeodata", {});
     }
 
     go = (e) => {
@@ -80,11 +83,8 @@ class App extends Component {
                             </UI.Group>
                         </UI.Panel>
                     </UI.View>
-                    <LostScreenMain id="lost" goMain={this.goToMain}
-                                    userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
-                    <FoundScreenMain id="found" goMain={this.goToMain}
-                                    userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
-
+                    <MainScreen id="lost" goMain={this.goToMain} coordinates = {this.state.coordinates}
+                                userId={this.state.fetchedUser === null ? 5 : this.state.fetchedUser.id}/>
                 </UI.Root>
             </UI.ConfigProvider>
         );

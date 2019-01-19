@@ -4,6 +4,7 @@ import * as UI from "@vkontakte/vkui";
 import Icon24Back from "@vkontakte/icons/dist/24/back";
 import Icon24Share from "@vkontakte/icons/dist/24/share";
 import Icon24Logo from "@vkontakte/icons/dist/24/logo_vk"
+import connect from '@vkontakte/vkui-connect';
 import $ from "jquery";
 
 
@@ -22,6 +23,7 @@ class MoreInfo extends React.Component {
             }
         };
         this.openDialog = this.openDialog.bind(this);
+
     }
 
     componentDidMount() {
@@ -93,7 +95,7 @@ class MoreInfo extends React.Component {
                                         size="xl">
                                         В избранное
                                     </UI.Button>
-                                    <UI.Button size="m" stretched level="secondary">
+                                    <UI.Button size="m" stretched level="secondary" >
                                         <Icon24Share/>
                                     </UI.Button>
                                 </div>

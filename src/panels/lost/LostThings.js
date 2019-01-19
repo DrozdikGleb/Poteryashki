@@ -3,13 +3,23 @@ import * as UI from '@vkontakte/vkui';
 import $ from 'jquery';
 import {Panel, PanelHeader} from '@vkontakte/vkui-connect';
 import AddLostThing from './AddLostThing';
-import MapContainer from "./MapContainer";
+import MapContainer from "../MapContainer";
 import Icon24MoreHorizontal from '@vkontakte/icons/dist/24/more_horizontal';
-import MoreInfo from "./MoreInfo";
-import OnMapThing from "./OnMapThing";
-import AllOnMap from "./AllOnMap";
+import MoreInfo from "../MoreInfo";
+import OnMapThing from "../OnMapThing";
+import AllOnMap from "../AllOnMap";
 import Icon24Back from "@vkontakte/icons/dist/24/back";
+import Icon24Filter from "@vkontakte/icons/dist/24/filter";
+import Icon24Place from "@vkontakte/icons/dist/24/place";
+import Geosuggest, {Suggest} from "react-geosuggest";
+import FilterLost from "./FilterLost";
 
+const google = window.google;
+
+const centerStyle = {
+    display: 'block',
+    margin: 'auto'
+};
 
 class LostThings extends React.Component {
     constructor(props) {
@@ -18,12 +28,14 @@ class LostThings extends React.Component {
             //TODO добавить в AddLostThing.js lat and lng
             lat: null,
             lng: null,
+            latSug:null,
+            lngSug:null,
             activePanel: "lost",
             lost_array: [],
             lostThingInfo: null,
+            found_nearby_array:[],
             placeName: null,
             pressId: 0
-
         };
         this.printLostThingInfo = this.printLostThingInfo.bind(this);
         this.goToAddLostThing = this.goToAddLostThing.bind(this);
@@ -73,6 +85,21 @@ class LostThings extends React.Component {
         this.setState({activePanel: name})
     };
 
+    onSuggestSelect = (place: Suggest) => {
+        if (place == null) return;
+        const {
+            location: {lat, lng}
+        } = place;
+        console.log(place);
+        this.setState({
+            latSug: parseFloat(lat),
+            lngSug: parseFloat(lng),
+            placeName: place.description
+        });
+        this.state.found_nearby_array = null;
+        //this.getNearbyFoundThings();
+    };
+
     //элемент листа потерянной вещи
     printLostThingInfo(thing) {
         return <UI.Group>
@@ -103,21 +130,24 @@ class LostThings extends React.Component {
             <UI.View activePanel={this.state.activePanel}>
                 <UI.Panel id='lost'>
                     <UI.PanelHeader key="panelHeaderLost"
-                                    left={<UI.HeaderButton onClick={this.props.goMain} data-to="mainView">{
-                                        <Icon24Back/>}</UI.HeaderButton>}
+
+                                    left={[<UI.HeaderButton
+                                        style={{display: 'inline-block'}}
+                                        onClick = {() => {this.setPanel('filterLost')}}
+                                        ><Icon24Filter/></UI.HeaderButton>,
+                                        <UI.HeaderButton
+                                            onClick = {() => {this.setPanel('allOnMap')}}
+                                            style={{display: 'inline-block'}}><Icon24Place/></UI.HeaderButton>]}
                     >
                         Потеряшки
                     </UI.PanelHeader>
-                    <UI.Group>
-                        <UI.Cell before={<UI.Button level="commerce" onClick={() => this.goToAddLostThing()}>
-                            Добавить потеряшку
-                        </UI.Button>}
-                                 asideContent={<UI.Button level="commerce" onClick={() => this.goToAllLostOnMap()}>
-                                     Все потеряшки на карте
-                                 </UI.Button>}>
-                        </UI.Cell>
-                    </UI.Group>
-                    <UI.Search/>
+                    <Geosuggest
+                        style = {centerStyle}
+                        placeholder="Введите место, где потеряна вещь"
+                        onSuggestSelect={this.onSuggestSelect}
+                        location={new google.maps.LatLng(53.558572, 9.9278215)}
+                        radius={20}
+                    />
                     {this.state.lost_array && this.state.lost_array.map(thing => this.printLostThingInfo(thing))}
                 </UI.Panel>
                 <AddLostThing id="addThing" setPanel={this.setPanel} lat={this.state.lat} lng={this.state.lng}
@@ -126,7 +156,8 @@ class LostThings extends React.Component {
                 <MapContainer id="map" go={this.goToAddLostThing}/>
                 <MoreInfo id="moreInfo" idThing={this.state.pressId} go={this.go}/>
                 <OnMapThing id="onMap" uID={this.state.pressId} lostThingInfo={this.state.lostThingInfo} go={this.go}/>
-                <AllOnMap id="allOnMap" setPanel={this.setPanel} lostArray={this.state.lost_array}/>
+                <AllOnMap id="allOnMap" from = "lost" setPanel={this.setPanel} lostArray={this.state.lost_array}/>
+                <FilterLost id="filterLost" setPanel = {this.setPanel}/>
             </UI.View>
 
 

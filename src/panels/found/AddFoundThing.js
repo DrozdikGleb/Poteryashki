@@ -8,17 +8,17 @@ import {DateFormatInput, TimeFormatInput} from 'material-ui-next-pickers'
 import 'flatpickr/dist/themes/material_green.css'
 import Flatpickr from 'react-flatpickr'
 import "react-datepicker/dist/react-datepicker.css";
-import '../styles/my_picker_style.css'
+import '../../styles/my_picker_style.css'
 import ru from 'date-fns/locale/ru';
 
 registerLocale('ru', ru);
 
 
-class AddLostThing extends React.Component {
+class AddFoundThing extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            activePanel: "addThing",
+            activePanel: "addFoundThing",
             startDate: new Date(),
             image: null,
             imageDownloaded: null,
@@ -30,7 +30,7 @@ class AddLostThing extends React.Component {
                 phone: '-'
             }
         };
-        this.addLostThing = this.addLostThing.bind(this);
+        this.addFoundThing = this.addFoundThing.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
         this.handleDataChange = this.handleDataChange.bind(this);
         this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this);
@@ -57,20 +57,19 @@ class AddLostThing extends React.Component {
         this.saveStateToLocalStorage();
     }
 
-    addLostThing() {
+    addFoundThing() {
         this.formData = new FormData();
 
         this.formData.append('name', this.state.thingInfo.name);
         this.formData.append('userId', this.props.userId);
         this.formData.append('category', this.state.thingInfo.category);
-        this.formData.append('place', this.props.lat && (this.props.lat.toString() + "," + this.props.lng.toString()));
+       /* this.formData.append('lat', this.state.lng);
+        this.formData.append('lng', this.state.lng);*/
         this.formData.append('comments', this.state.thingInfo.comments);
-        this.formData.append('date', this.state.startDate.toLocaleString());
-        this.formData.append("image", this.state.image);
 
         $.ajax(
             {
-                url: 'https://degi.shn-host.ru/lostthings/addLostThing.php',
+                url: 'https://degi.shn-host.ru/lostthings/addFoundThing.php',
                 type: 'POST',
                 contentType: false,
                 processData: false,
@@ -141,9 +140,9 @@ class AddLostThing extends React.Component {
         return (
             <UI.Panel id={this.props.id}>
                 <UI.PanelHeader key="addThing" left={<UI.HeaderButton onClick={() => {
-                    this.props.setPanel("lost");
+                    this.props.setPanel("myAds");
                 }
-                }>{<Icon24Back/>}</UI.HeaderButton>}>Добавление потеряшки</UI.PanelHeader>
+                }>{<Icon24Back/>}</UI.HeaderButton>}>Добавление найдёныша</UI.PanelHeader>
                 <UI.Group title="Информация">
                     <UI.List>
                         <UI.Cell><UI.InfoRow title="Название">
@@ -216,7 +215,7 @@ class AddLostThing extends React.Component {
                     </UI.FormLayout>
                 </UI.Group>
                 <UI.Group>
-                    <UI.Button size="xl" level="commerce" onClick={() => this.addLostThing()}>
+                    <UI.Button size="xl" level="commerce" onClick={() => this.addFoundThing()}>
                         Добавить
                     </UI.Button>
                 </UI.Group>
@@ -225,4 +224,4 @@ class AddLostThing extends React.Component {
     }
 }
 
-export default AddLostThing;
+export default AddFoundThing;

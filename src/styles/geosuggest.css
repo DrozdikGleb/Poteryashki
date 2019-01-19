@@ -2,13 +2,15 @@
     font-size: 18px;
     font-size: 1rem;
     position: relative;
-    width: 80%;
+    width: 100%;
     text-align: left;
 }
 .geosuggest__input {
     font-family: georgia;
     width: 90%;
     height: 17px;
+    margin: 0 auto;
+    display: block;
     border-radius: 5px;
     padding: .5em 1em;
     background-color: #f8f8f8;
@@ -19,17 +21,19 @@
     cursor: pointer;
 }
 .geosuggest__input:focus {
-    border-color: #a6a6a6;;
+    border-color: #a6a6a6;
     box-shadow: 0 0 0 transparent;
 }
 .geosuggest__suggests {
     position: absolute;
     top: 100%;
+    width: 90%;
     left: 0;
     right: 0;
     max-height: 25em;
     padding: 0;
-    margin-top: -1px;
+    margin: 0 auto;
+    display: block;
     background: #f8f8f8;
     border: 2px solid #a6a6a6;;
     border-top-width: 0;
