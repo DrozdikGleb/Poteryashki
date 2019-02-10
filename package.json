@@ -30,11 +30,16 @@
     "moment": "^2.17.1",
     "prop-types": "^15.6.2",
     "react": "^16.7.0",
+    "react-copy-to-clipboard": "^5.0.1",
     "react-datepicker": "^2.0.0",
     "react-dom": "^16.7.0",
     "react-flatpickr": "^3.6.4",
     "react-geosuggest": "^2.9.0",
     "react-google-maps": "^9.4.5",
+    "react-image-lightbox": "^5.1.0",
+    "react-images": "^0.5.19",
+    "react-lightbox-component": "^1.2.1",
+    "react-modal-image": "^2.3.1",
     "react-router-dom": "^4.3.1"
   }
 }

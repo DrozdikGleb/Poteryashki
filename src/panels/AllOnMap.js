@@ -39,27 +39,38 @@ class AllOnMap extends React.Component {
 
     componentWillMount() {
         this.state.fetchInProgress = false;
-        console.log(this.state.lat);
     }
 
     getAllLostThings() {
-        $.ajax(
-            {
-                url: 'https://degi.shn-host.ru/lostthings/getAllLostThings.php',
-                type: 'GET',
-                dataType: "json"
-            }
-        ).done(function (data) {
-            //alert(JSON.stringify(data));
-            this.setState({lost_array: data['result']})
-        }.bind(this));
+        if (this.props.from === "lost") {
+            $.ajax(
+                {
+                    url: 'https://degi.shn-host.ru/lostthings/getAllLostThings.php',
+                    type: 'GET',
+                    dataType: "json"
+                }
+            ).done(function (data) {
+                this.setState({lost_array: data['result']})
+            }.bind(this));
+        } else {
+            $.ajax(
+                {
+                    url: 'https://degi.shn-host.ru/lostthings/getAllFoundThings.php',
+                    type: 'GET',
+                    dataType: "json"
+                }
+            ).done(function (data) {
+                this.setState({lost_array: data['result']})
+            }.bind(this));
+        }
+
     };
 
     render() {
         return (
             <UI.Panel id='allOnMap'>
                 <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={() => {this.props.from === "found" ? this.props.setPanel("found") : this.props.setPanel("lost")}
-                }>{<Icon24Back/>}</UI.HeaderButton>}>Все потеряшки на карте</UI.PanelHeader>
+                }>{<Icon24Back/>}</UI.HeaderButton>}>Все на карте</UI.PanelHeader>
                 {this.state.fetchInProgress && <UI.ScreenSpinner/>}
                 {this.state.lost_array && <MyMapComponent
                     isMarkerShown

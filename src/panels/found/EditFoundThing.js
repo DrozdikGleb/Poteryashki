@@ -30,7 +30,7 @@ const MyMapComponent = withGoogleMap((props) =>
 const google = window.google;
 
 
-class AddFoundThing extends React.Component {
+class EditFoundThing extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -39,8 +39,8 @@ class AddFoundThing extends React.Component {
             thingLat: null,
             thingLng: null,
             placeNameInter: null,
-            placeName: "Не указано",
-            activePanel: "addFoundThing",
+            placeName: null,
+            activePanel: "editFoundThing",
             startDate: new Date(),
             image: null,
             isClickedMap: false,
@@ -56,21 +56,12 @@ class AddFoundThing extends React.Component {
                 email: null
             }
         };
-        this.addFoundThing = this.addFoundThing.bind(this);
+        this.updateFoundThing = this.updateFoundThing.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
         this.handleDataChange = this.handleDataChange.bind(this);
-        this.getReverseGeocodingData = this.getReverseGeocodingData.bind(this);
-        //this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this);
+        this.getFoundThingInfo = this.getFoundThingInfo.bind(this);
+        this.getFoundThingInfo();
     }
-
-    /*componentDidMount() {
-        this.hydrateStateWithLocalStorage();
-
-        window.addEventListener(
-            "beforeunload",
-            this.saveStateToLocalStorage.bind(this)
-        );
-    }*/
 
     componentWillMount() {
 
@@ -95,28 +86,12 @@ class AddFoundThing extends React.Component {
         });
     }
 
-    /*componentWillUnmount() {
-        window.removeEventListener(
-            "beforeunload",
-            this.saveStateToLocalStorage.bind(this)
-        );
-
-        // saves if component has a chance to unmount
-        this.saveStateToLocalStorage();
-    }*/
-
-    addFoundThing() {
+    updateFoundThing() {
         this.formData = new FormData();
-        var me = this;
-        if (this.state.placeName === null || this.state.thingInfo.name === null || this.state.thingInfo.category === null
-            || this.state.thingInfo.comments === null) {
-            this.showMessage("Заполните все обязательные поля");
-            return;
-        }
+        this.formData.append('thing_id', this.props.thing_id);
         this.formData.append('name', this.state.thingInfo.name);
         this.formData.append('userId', this.props.userId);
         this.formData.append('category', this.state.thingInfo.category);
-        this.formData.append('placeName', this.state.placeNameInter === null ? "Не указано" : this.state.placeNameInter);
         this.formData.append('place', this.state.thingLat && (this.state.thingLat.toString() + "," + this.state.thingLng.toString()));
         this.formData.append('comments', this.state.thingInfo.comments);
         this.formData.append('date', this.state.startDate.toLocaleString());
@@ -126,16 +101,40 @@ class AddFoundThing extends React.Component {
 
         $.ajax(
             {
-                url: 'https://degi.shn-host.ru/lostthings/addFoundThing.php',
+                url: 'https://degi.shn-host.ru/lostthings/editFoundThing.php',
                 type: 'POST',
                 contentType: false,
                 processData: false,
                 data: this.formData
             }
         ).done(function (data) {
-            me.showMessage("Объявление успешно добавлено");
-            me.props.setPanel("myAds");
+
         });
+        this.props.setPanel("myAds");
+    }
+
+    getFoundThingInfo() {
+        $.ajax(
+            {
+                url: 'https://degi.shn-host.ru/lostthings/getFoundThing.php',
+                type: 'POST',
+                dataType: "json",
+                data: {
+                    id: this.props.thing_id
+                }
+            }
+        ).done(function (data) {
+            this.setState({fetchInProgress: false});
+            this.state.thingInfo.name = data['result'][0]['name'];
+            this.state.thingInfo.category = data['result'][0]['category'];
+            this.state.thingInfo.comments = data['result'][0]['comments'];
+            this.state.thingInfo.owner = data['result'][0]['owner'];
+            this.state.imageDownloaded = data['result'][0]['imageLink'];
+            this.state.thingLat = data['result'][0]['lat'];
+            this.state.thingLng = data['result'][0]['lng'];
+            this.state.thingInfo.phone = data['result'][0]['phone'];
+            this.state.thingInfo.email = data['result'][0]['email'];
+        }.bind(this));
     }
 
     onInputChange(e) {
@@ -182,58 +181,6 @@ class AddFoundThing extends React.Component {
         });
     };
 
-    showMessage(message, info) {
-        this.props.setPopout(
-            <UI.Alert
-                actions={[{
-                    title: 'OK',
-                    autoclose: true,
-                    style: 'destructive'
-                }]}
-                onClose={() => this.props.setPopout(null)}
-            >
-                <h2>{message}</h2>
-                <p>{info}</p>
-            </UI.Alert>
-        );
-    }
-
-    getReverseGeocodingData(lat, lng) {
-        var latlng = new google.maps.LatLng(lat, lng);
-        var geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ 'latLng': latlng }, (results, status) => {
-            // This is checking to see if the Geoeode Status is OK before proceeding
-            if (status === google.maps.GeocoderStatus.OK) {
-                this.setState({placeNameInter: results[0].formatted_address});
-            }
-        });
-    }
-
-   /* hydrateStateWithLocalStorage() {
-        for (let key in this.state) {
-            if (key === "imageDownloaded") continue;
-            if (localStorage.hasOwnProperty(key)) {
-
-                let value = localStorage.getItem(key);
-
-                try {
-                    value = JSON.parse(value);
-                    this.setState({[key]: value});
-                } catch (e) {
-                    this.setState({[key]: value});
-                }
-            }
-        }
-    }
-
-    saveStateToLocalStorage() {
-        for (let key in this.state) {
-            if (key === "imageDownloaded") continue;
-            localStorage.setItem(key, JSON.stringify(this.state[key]));
-        }
-    }*/
-
-
     render() {
         return (
             <UI.Panel id={this.props.id}>
@@ -272,10 +219,10 @@ class AddFoundThing extends React.Component {
 
 
                     <UI.Div>
-                        <UI.PanelHeader key="addFoundThing" left={<UI.HeaderButton onClick={() => {
+                        <UI.PanelHeader key="editFoundThing" left={<UI.HeaderButton onClick={() => {
                             this.props.setPanel("myAds");
                         }
-                        }>{<Icon24Back/>}</UI.HeaderButton>}>Новый найдёныш</UI.PanelHeader>
+                        }>{<Icon24Back/>}</UI.HeaderButton>}>Редактирование</UI.PanelHeader>
                         <UI.Group title="Информация">
                             <UI.List>
                                 <UI.Cell><UI.InfoRow
@@ -314,6 +261,8 @@ class AddFoundThing extends React.Component {
                                         Загрузить фото
                                     </UI.File>}
                                     asideContent={<UI.Avatar type="image" src={this.state.imageDownloaded}/>}>
+
+
                                 </UI.Cell>
 
                             </UI.List>
@@ -355,8 +304,8 @@ class AddFoundThing extends React.Component {
                             </UI.FormLayout>
                         </UI.Group>
                         <UI.Group>
-                            <UI.Button size="xl" level="commerce" onClick={() => this.addFoundThing()}>
-                                Добавить
+                            <UI.Button size="xl" level="commerce" onClick={() => this.updateFoundThing()}>
+                                Обновить
                             </UI.Button>
                         </UI.Group>
                     </UI.Div>
@@ -366,4 +315,4 @@ class AddFoundThing extends React.Component {
     }
 }
 
-export default AddFoundThing;
+export default EditFoundThing;

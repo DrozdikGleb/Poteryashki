@@ -10,7 +10,7 @@ class App extends Component {
 
         this.state = {
             coordinates:null,
-            activeView: 'mainView',
+            activeView: 'lost',
             fetchedUser: null
         };
     }
@@ -41,8 +41,6 @@ class App extends Component {
     };
 
     render() {
-
-        // TODO Сделать две панели для потеряшек и найдёнышей
         return (
             <UI.ConfigProvider insets={this.props.insets}>
                 <UI.Root activeView={this.state.activeView}>
