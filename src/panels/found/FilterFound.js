@@ -1,7 +1,12 @@
 import React from 'react';
 import * as UI from "@vkontakte/vkui";
-import DatePicker from "react-datepicker/es";
 import $ from "jquery";
+import Icon24Search from "@vkontakte/icons/dist/24/search";
+import 'flatpickr/dist/themes/material_green.css'
+import Flatpickr from 'react-flatpickr'
+import "react-datepicker/dist/react-datepicker.css";
+import '../../styles/my_picker_style.css'
+import moment from "moment";
 import Icon24Back from "@vkontakte/icons/dist/24/back";
 
 
@@ -9,24 +14,21 @@ class FilterFound extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            startDate: new Date(),
+            chosenDate: null,
+            timeFrom: null,
+            timeTo: null,
             activePanel: "filterFound",
-            found_array: [],
+            lost_array: [],
             thingInfo: {
-                category: 'тук'
+                category: null,
+                name:null,
+                radius: null
             }
         };
-        this.handleDataChange = this.handleDataChange.bind(this);
         this.makeFilterRequest = this.makeFilterRequest.bind(this);
-        this.printThingInfo = this.printThingInfo.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
     }
 
-    handleDataChange(date) {
-        this.setState({
-            startDate: date
-        });
-    }
 
     onInputChange(e) {
         const {
@@ -46,33 +48,23 @@ class FilterFound extends React.Component {
     makeFilterRequest() {
         $.ajax(
             {
-                url: 'https://degi.shn-host.ru/lostthings/filterByFound.php',
-                type: 'POST',
+                url: 'https://degi.shn-host.ru/lostthings/filterBy.php',
+                type: 'GET',
                 dataType: "json",
                 data: {
+                    table: "found",
+                    date: this.state.chosenDate,
+                    timeFrom: this.state.timeFrom,
+                    timeTo: this.state.timeTo,
+                    name: this.state.thingInfo.name,
                     category: this.state.thingInfo.category,
+                    //radius: this.state.thingInfo.radius
                 }
             }
         ).done(function (data) {
-            this.setState({found_array: data['result']})
+            this.props.setFilteredArray(data['result']);
+            this.props.setPanel("found");
         }.bind(this));
-    }
-
-    printThingInfo(thing) {
-        return <UI.Group title='Найденная вещь'>
-            <UI.List>
-                <UI.Cell asideContent={<UI.Div>{thing.date}</UI.Div>}>
-                    <UI.InfoRow title="наименование">
-                        {thing.name}
-                    </UI.InfoRow>
-                </UI.Cell>
-                <UI.Cell>
-                    <UI.InfoRow title="Категория">
-                        {thing.category}
-                    </UI.InfoRow>
-                </UI.Cell>
-            </UI.List>
-        </UI.Group>
     }
 
     render() {
@@ -82,7 +74,14 @@ class FilterFound extends React.Component {
                     this.props.setPanel("found");
                 }
                 }>{<Icon24Back/>}</UI.HeaderButton>}>Фильтр</UI.PanelHeader>
+                <UI.Group>
                 <UI.FormLayout>
+                    <UI.FormLayout>
+                        <UI.Input type="Наименование" top="Наименование"
+                                  value={this.state.thingInfo.name}
+                                  name="name"
+                                  onChange={this.onInputChange}/>
+                    </UI.FormLayout>
                     <UI.Select top="Категория" placeholder="Выберите категорию"
                                value={this.state.thingInfo.category}
                                name="category"
@@ -91,25 +90,64 @@ class FilterFound extends React.Component {
                         <option value="одежда">Одежда</option>
                         <option value="люди">Люди</option>
                         <option value="документы">Документы</option>
+                        <option value="другое">Другое</option>
                     </UI.Select>
-                    <UI.Div align="center">
-                        <DatePicker
-                            selected={this.state.startDate}
-                            onChange={this.handleDataChange}
-                            placeholderText="Нажмите для выбора даты и времени"
-                            locale="ru"
-                            dateFormat="d MMMM yyyy"
-                            timeCaption="Время"
-                        />
+
+                    <UI.Div align="left">
+                        <UI.InfoRow title="Выберите дату и время потери">
+                            <Flatpickr
+                                value={this.state.chosenDate}
+                                options={
+                                    {
+                                        maxTime: "today"
+                                    }
+                                }
+                                onChange={date => {
+                                    this.setState({chosenDate: moment(date.toString()).format('YYYY-MM-DD')})
+                                }}
+                            />
+                        </UI.InfoRow>
+
+                        <UI.InfoRow title="От"><Flatpickr
+                            options={
+                                {
+                                    enableTime: "true",
+                                    noCalendar: "true",
+                                    dateFormat: "H:i",
+                                    time_24hr: true
+                                }
+                            }
+                            value={this.state.timeFrom}
+                            onChange={time => {
+                                this.setState({timeFrom: moment(time.toString()).format('H:mm')})
+                            }}
+                        /></UI.InfoRow>
+
+                        <UI.InfoRow title="До">
+                            <Flatpickr
+                                data-disable-time
+                                options={
+                                    {
+                                        enableTime: "true",
+                                        noCalendar: "true",
+                                        dateFormat: "H:i",
+                                        time_24hr: true
+                                    }
+                                }
+                                value={this.state.timeTo}
+                                onChange={time => {
+                                    this.setState({timeTo: moment(time.toString()).format('H:mm')})
+                                }}
+                            />
+                        </UI.InfoRow>
                     </UI.Div>
-                    <UI.Checkbox>Рядом со мной</UI.Checkbox>
                     <UI.Div align="center">
-                        <UI.Button onClick={() => this.makeFilterRequest()}>
+                        <UI.Button size = "xl" before={<Icon24Search/>} onClick={() => this.makeFilterRequest()}>
                             Показать
                         </UI.Button>
                     </UI.Div>
                 </UI.FormLayout>
-                {this.state.found_array && this.state.found_array.map(thing => this.printThingInfo(thing))}
+                </UI.Group>
             </UI.Panel>
         )
     }

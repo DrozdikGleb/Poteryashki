@@ -40,7 +40,7 @@ class AddLostThing extends React.Component {
             thingLng: null,
             placeNameInter: null,
             placeName: null,
-            activePanel: "addThing",
+            activePanel: "addLostThing",
             startDate: new Date(),
             image: null,
             isClickedMap: false,
@@ -48,10 +48,10 @@ class AddLostThing extends React.Component {
             phone: null,
             email: null,
             thingInfo: {
-                name: 'тук',
-                category: 'тук',
-                place: 'тук',
-                comments: 'тук',
+                name: null,
+                category: null,
+                place: null,
+                comments: null,
                 phone: null,
                 email: null
             }
@@ -59,9 +59,12 @@ class AddLostThing extends React.Component {
         this.addLostThing = this.addLostThing.bind(this);
         this.onInputChange = this.onInputChange.bind(this);
         this.handleDataChange = this.handleDataChange.bind(this);
-        this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this);
+        this.getReverseGeocodingData = this.getReverseGeocodingData.bind(this);
+        this.showMessage = this.showMessage.bind(this);
+        //this.saveStateToLocalStorage = this.saveStateToLocalStorage.bind(this);
     }
 
+    /*
     componentDidMount() {
         this.hydrateStateWithLocalStorage();
 
@@ -72,6 +75,41 @@ class AddLostThing extends React.Component {
             this.saveStateToLocalStorage.bind(this)
         );
     }
+
+    componentWillUnmount() {
+        window.removeEventListener(
+            "beforeunload",
+            this.saveStateToLocalStorage.bind(this)
+        );
+
+        // saves if component has a chance to unmount
+        this.saveStateToLocalStorage();
+    }
+
+    hydrateStateWithLocalStorage() {
+        for (let key in this.state) {
+            if (key === "imageDownloaded") continue;
+            if (localStorage.hasOwnProperty(key)) {
+
+                let value = localStorage.getItem(key);
+
+                try {
+                    value = JSON.parse(value);
+                    this.setState({[key]: value});
+                } catch (e) {
+                    this.setState({[key]: value});
+                }
+            }
+        }
+    }
+
+    saveStateToLocalStorage() {
+        for (let key in this.state) {
+            if (key === "imageDownloaded") continue;
+            localStorage.setItem(key, JSON.stringify(this.state[key]));
+        }
+    }
+    */
 
     componentWillMount() {
 
@@ -86,32 +124,34 @@ class AddLostThing extends React.Component {
                     thingInfo["phone"] = e.detail.data.phone_number;
                     this.setState(thingInfo);
                     break;
+                case 'VKWebAppGetPersonalCardResult' :
+                    thingInfo["email"] = e.detail.data.email;
+                    thingInfo["phone"] = e.detail.data.phone;
+                    this.setState(thingInfo);
+                    break;
                 default:
-                    alert("error");
             }
         });
     }
 
-    componentWillUnmount() {
-        window.removeEventListener(
-            "beforeunload",
-            this.saveStateToLocalStorage.bind(this)
-        );
-
-        // saves if component has a chance to unmount
-        this.saveStateToLocalStorage();
-    }
-
     addLostThing() {
         this.formData = new FormData();
-
+        var me = this;
+        if (this.state.placeName === null || this.state.thingInfo.name === null || this.state.thingInfo.category === null
+         || this.state.thingInfo.comments === null) {
+            this.showMessage("Заполните все обязательные поля");
+            return;
+        }
         this.formData.append('name', this.state.thingInfo.name);
         this.formData.append('userId', this.props.userId);
         this.formData.append('category', this.state.thingInfo.category);
+        this.formData.append('placeName', this.state.placeName === null ? "Не указано" : this.state.placeName);
         this.formData.append('place', this.state.thingLat && (this.state.thingLat.toString() + "," + this.state.thingLng.toString()));
         this.formData.append('comments', this.state.thingInfo.comments);
         this.formData.append('date', this.state.startDate.toLocaleString());
         this.formData.append("image", this.state.image);
+        this.formData.append("phone", this.state.phone !== null ? this.state.phone : "Не указан");
+        this.formData.append("email", this.state.phone !== null ? this.state.email : "Не указан");
 
         $.ajax(
             {
@@ -122,8 +162,28 @@ class AddLostThing extends React.Component {
                 data: this.formData
             }
         ).done(function (data) {
-            alert(data);
+            //TODO проверка на получение плохого ответа
+            me.showMessage("Объявление успешно добавлено");
+            me.props.setPanel("myAds");
+
         });
+
+    }
+
+    showMessage(message, info) {
+        this.props.setPopout(
+            <UI.Alert
+                actions={[{
+                    title: 'OK',
+                    autoclose: true,
+                    style: 'destructive'
+                }]}
+                onClose={() => this.props.setPopout(null)}
+            >
+                <h2>{message}</h2>
+                <p>{info}</p>
+            </UI.Alert>
+        );
     }
 
     onInputChange(e) {
@@ -170,28 +230,15 @@ class AddLostThing extends React.Component {
         });
     };
 
-    hydrateStateWithLocalStorage() {
-        for (let key in this.state) {
-            if (key === "imageDownloaded") continue;
-            if (localStorage.hasOwnProperty(key)) {
-
-                let value = localStorage.getItem(key);
-
-                try {
-                    value = JSON.parse(value);
-                    this.setState({[key]: value});
-                } catch (e) {
-                    this.setState({[key]: value});
-                }
+    getReverseGeocodingData(lat, lng) {
+        var latlng = new google.maps.LatLng(lat, lng);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({'latLng': latlng}, (results, status) => {
+            // This is checking to see if the Geoeode Status is OK before proceeding
+            if (status === google.maps.GeocoderStatus.OK) {
+                this.setState({placeNameInter: results[0].formatted_address});
             }
-        }
-    }
-
-    saveStateToLocalStorage() {
-        for (let key in this.state) {
-            if (key === "imageDownloaded") continue;
-            localStorage.setItem(key, JSON.stringify(this.state[key]));
-        }
+        });
     }
 
 
@@ -204,6 +251,7 @@ class AddLostThing extends React.Component {
                     }>{<Icon24Back/>}</UI.HeaderButton>}>На карте</UI.PanelHeader>
 
                         <Geosuggest
+                            initialValue={this.state.placeNameInter}
                             placeholder="Введите место, где потеряна вещь"
                             onSuggestSelect={this.onSuggestSelect}
                             location={new google.maps.LatLng(53.558572, 9.9278215)}
@@ -219,6 +267,7 @@ class AddLostThing extends React.Component {
                                                                 onClick={x => {
                                                                     const lat = x.latLng.lat();
                                                                     const lng = x.latLng.lng();
+                                                                    this.getReverseGeocodingData(lat, lng);
                                                                     this.setState({
                                                                         thingLat: parseFloat(lat),
                                                                         thingLng: parseFloat(lng)
@@ -236,7 +285,7 @@ class AddLostThing extends React.Component {
                         <UI.PanelHeader key="addThing" left={<UI.HeaderButton onClick={() => {
                             this.props.setPanel("myAds");
                         }
-                        }>{<Icon24Back/>}</UI.HeaderButton>}>Добавление потеряшки</UI.PanelHeader>
+                        }>{<Icon24Back/>}</UI.HeaderButton>}>Новая потеряшка</UI.PanelHeader>
                         <UI.Group title="Информация">
                             <UI.List>
                                 <UI.Cell><UI.InfoRow
@@ -254,8 +303,12 @@ class AddLostThing extends React.Component {
                                     name="category"
                                     onChange={this.onInputChange}>
                                     <option value="одежда">Одежда</option>
-                                    <option value="люди">Люди</option>
+                                    <option value="обувь">Обувь</option>
+                                    <option value="электроника">Электроника</option>
+                                    <option value="канцтовары">Канцтовары</option>
+                                    <option value="аксессуары">Аксессуары</option>
                                     <option value="документы">Документы</option>
+                                    <option value="деньги">Деньги</option>
                                     <option value="другое">Другое</option>
                                 </UI.Select></UI.InfoRow></UI.Cell>
                                 <UI.Cell><UI.InfoRow
@@ -278,26 +331,22 @@ class AddLostThing extends React.Component {
                             </UI.List>
                         </UI.Group>
                         <UI.Group title={<div>Местоположение<span style={{color: "#4CAF50"}}>*</span></div>}>
-                            <UI.Cell before={<UI.Button before={<Icon24Map/>} onClick={() => {
-                                this.setState({isClickedMap: true});
-                            }}>
-                                Указать на карте
-                            </UI.Button>}
-                                     asideContent={this.state.placeName && <UI.InfoRow title="Место потери">
-                                         {this.state.placeName}
-                                     </UI.InfoRow>}>
-
-                            </UI.Cell>
+                            <UI.Div>
+                                <UI.Button size="xl" before={<Icon24Map/>} onClick={() => {
+                                    this.setState({isClickedMap: true});
+                                }}>
+                                    Указать на карте
+                                </UI.Button>
+                            </UI.Div>
+                            <UI.Div>
+                                <UI.InfoRow title="Место потери">
+                                    {this.state.placeName}</UI.InfoRow>
+                            </UI.Div>
                         </UI.Group>
                         <UI.Group title="Дата и время" align="center">
                             <UI.Cell>
                                 <Flatpickr
                                     data-enable-time
-                                    options={
-                                        {
-                                            maxDate: "today"
-                                        }
-                                    }
                                     value={this.state.startDate}
                                     onChange={date => {
                                         this.setState({date})
@@ -308,17 +357,13 @@ class AddLostThing extends React.Component {
                         </UI.Group>
                         <UI.Group title="Контакты">
                             <UI.FormLayout>
-                                <UI.Input type="number" top="Телефон" value={this.state.thingInfo.phone}
+                                <UI.Button size = "xl" onClick = {() => {connect.send("VKWebAppGetPersonalCard", {"type": ["phone", "email"]})}}>Оставить контакты</UI.Button>
+                                <UI.Input top="Телефон" value={this.state.thingInfo.phone}
                                           onClic
                                           name="phone"
-                                          onClick={() => {
-                                              connect.send("VKWebAppGetPhoneNumber", {})
-                                          }}
                                           onChange={this.onInputChange}/>
-                                <UI.Input type="email" top="E-mail" value={this.state.thingInfo.email} onClick={() => {
-                                    connect.send("VKWebAppGetEmail", {})
-                                }
-                                } name="email" onChange={this.onInputChange}/>
+                                <UI.Input type="email" top="E-mail" value={this.state.thingInfo.email}
+                                          name="email" onChange={this.onInputChange}/>
                             </UI.FormLayout>
                         </UI.Group>
                         <UI.Group>

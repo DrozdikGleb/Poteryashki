@@ -27,28 +27,46 @@ class OnMapThing extends React.Component {
     }
 
     componentDidMount() {
-        $.ajax(
-            {
-                url: 'https://degi.shn-host.ru/lostthings/getLostThing.php',
-                type: 'POST',
-                dataType: "json",
-                data: {
-                    id: this.props.uID
+        if (this.props.from === "found") {
+            $.ajax(
+                {
+                    url: 'https://degi.shn-host.ru/lostthings/getFoundThing.php',
+                    type: 'POST',
+                    dataType: "json",
+                    data: {
+                        id: this.props.uID
+                    }
                 }
-            }
-        ).done(function (data) {
-            //console.log(data['result'][0]['lat'])
-            this.state.lat = parseFloat(data['result'][0]['lat']);
-            this.state.lng = parseFloat(data['result'][0]['lng']);
-            this.setState({fetchInProgress: false});
-        }.bind(this));
+            ).done(function (data) {
+                //console.log(data['result'][0]['lat'])
+                this.state.lat = parseFloat(data['result'][0]['lat']);
+                this.state.lng = parseFloat(data['result'][0]['lng']);
+                this.setState({fetchInProgress: false});
+            }.bind(this));
+        } else {
+            $.ajax(
+                {
+                    url: 'https://degi.shn-host.ru/lostthings/getLostThing.php',
+                    type: 'POST',
+                    dataType: "json",
+                    data: {
+                        id: this.props.uID
+                    }
+                }
+            ).done(function (data) {
+                //console.log(data['result'][0]['lat'])
+                this.state.lat = parseFloat(data['result'][0]['lat']);
+                this.state.lng = parseFloat(data['result'][0]['lng']);
+                this.setState({fetchInProgress: false});
+            }.bind(this));
+        }
     }
 
     render() {
         return (
             <UI.Panel id='onMap'>
                 <UI.PanelHeader noShadow left={<UI.HeaderButton onClick={this.props.go
-                } data-to={this.props.from === "myAds" ? "myAds" : "lost"}>{<Icon24Back/>}</UI.HeaderButton>}>Потеряшка на карте</UI.PanelHeader>
+                } data-to={this.props.from === "myAds" ? "myAds" : this.props.from === "lost" ? "moreInfoLost" : "moreInfoFound"}>{<Icon24Back/>}</UI.HeaderButton>}>Потеряшка на карте</UI.PanelHeader>
                 {this.state.fetchInProgress && <UI.ScreenSpinner/>}
                 {this.state.lat && <MyMapComponent
                     isMarkerShown

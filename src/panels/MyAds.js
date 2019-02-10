@@ -3,18 +3,20 @@ import {Panel, PanelHeader} from '@vkontakte/vkui-connect';
 import * as UI from "@vkontakte/vkui";
 import Icon24Back from "@vkontakte/icons/dist/24/back";
 import Icon28Cancel from "@vkontakte/icons/dist/28/cancel_outline";
+import Icon28Write from "@vkontakte/icons/dist/28/write";
 import Icon24Add from "@vkontakte/icons/dist/24/add";
 import $ from "jquery";
 import AddLostThing from "./lost/AddLostThing";
 import MapContainer from "./MapContainer";
-import MoreInfo from "./MoreInfo";
 import OnMapThing from "./OnMapThing";
 import AllOnMap from "./AllOnMap";
 import AddFoundThing from "./found/AddFoundThing";
+import EditFoundThing from "./found/EditFoundThing";
+import EditLostThing from "./lost/EditLostThing";
 
 const centerStyle = {
     display: 'inline-block',
-    verticalAlign:'middle'
+    verticalAlign: 'middle'
 };
 
 class MyAds extends React.Component {
@@ -23,6 +25,7 @@ class MyAds extends React.Component {
         this.state = {
             lat: null,
             lng: null,
+            popout: null,
             chosen_lat_found: null,
             chosen_lng_found: null,
             activePanel: "myAds",
@@ -37,6 +40,8 @@ class MyAds extends React.Component {
         this.getMoreInfoAboutLostThing = this.getMoreInfoAboutLostThing.bind(this);
         this.goToAddLostOrFoundThing = this.goToAddLostOrFoundThing.bind(this);
         this.deleteUserThing = this.deleteUserThing.bind(this);
+        this.goToEditLostOrFoundThing = this.goToEditLostOrFoundThing.bind(this);
+        this.setPopout = this.setPopout.bind(this);
         this.getAllUserLostThings();
         this.getAllUserFoundThings();
     }
@@ -56,6 +61,15 @@ class MyAds extends React.Component {
         } else {
             this.setState({activePanel: 'addFoundThing'})
         }
+    }
+
+    goToEditLostOrFoundThing(id) {
+        if (this.state.activeTab === 'lost') {
+            this.setState({activePanel: 'editLostThing'})
+        } else {
+            this.setState({activePanel: 'editFoundThing'})
+        }
+        this.state.pressId = id
     }
 
     deleteUserThing(thing_id) {
@@ -118,6 +132,10 @@ class MyAds extends React.Component {
         }.bind(this));
     }
 
+    setPopout(alert) {
+        this.setState({popout: alert});
+    }
+
     printUserAds(thing) {
         return <UI.Group>
             <UI.List>
@@ -129,7 +147,16 @@ class MyAds extends React.Component {
                         <div style={{display: 'flex'}}>
                         </div>
                     }
-                    asideContent={<UI.Button size="s" level="outline" onClick = {() => {this.deleteUserThing(thing._id)}}><Icon28Cancel/></UI.Button>}>
+                    asideContent={
+                        <div style={{display: 'flex'}}>
+                            <UI.Button style={{marginRight: "10px"}} size="s" level="outline" onClick={() => {
+                                this.goToEditLostOrFoundThing(thing._id)
+                            }}><Icon28Write/></UI.Button>
+                            <UI.Button size="s" level="outline" onClick={() => {
+                                this.deleteUserThing(thing._id)
+                            }}><Icon28Cancel/></UI.Button>
+                        </div>
+                    }>
                     {thing.name}
                 </UI.Cell>
             </UI.List>
@@ -138,7 +165,7 @@ class MyAds extends React.Component {
 
     render() {
         return (
-            <UI.View activePanel={this.state.activePanel}>
+            <UI.View popout = {this.state.popout} activePanel={this.state.activePanel}>
                 <UI.Panel id='myAds'>
                     <UI.PanelHeader noShadow
                                     key="panelHeaderMyAdsLost"
@@ -149,15 +176,19 @@ class MyAds extends React.Component {
                     <UI.Group>
                         <UI.Tabs theme="light">
                             <UI.TabsItem
-                                onClick={() => {this.setState({activeTab: 'lost'});
-                                this.getAllUserLostThings();}}
+                                onClick={() => {
+                                    this.setState({activeTab: 'lost'});
+                                    this.getAllUserLostThings();
+                                }}
                                 selected={this.state.activeTab === 'lost'}
                             >
                                 Потеряшки
                             </UI.TabsItem>
                             <UI.TabsItem
-                                onClick={() => {this.setState({activeTab: 'found'});
-                                this.getAllUserFoundThings();}}
+                                onClick={() => {
+                                    this.setState({activeTab: 'found'});
+                                    this.getAllUserFoundThings();
+                                }}
                                 selected={this.state.activeTab === 'found'}
                             >
                                 Найдёныши
@@ -167,8 +198,10 @@ class MyAds extends React.Component {
                             : this.state.found_array && this.state.found_array.map(thing => this.printUserAds(thing))}
                     </UI.Group>
                 </UI.Panel>
-                <AddFoundThing id="addFoundThing" userId={this.props.userId} setPanel={this.setPanel}/>
-                <AddLostThing id="addLostThing" userId={this.props.userId} setPanel={this.setPanel}/>
+                <AddFoundThing setPopout = {this.setPopout} id="addFoundThing" userId={this.props.userId} setPanel={this.setPanel}/>
+                <AddLostThing setPopout = {this.setPopout} id="addLostThing" userId={this.props.userId} setPanel={this.setPanel}/>
+                <EditFoundThing id="editFoundThing" thing_id = {this.state.pressId} userId = {this.props.userId} setPanel={this.setPanel}/>
+                <EditLostThing id="editLostThing" thing_id = {this.state.pressId} userId = {this.props.userId} setPanel={this.setPanel}/>
             </UI.View>
         )
     }

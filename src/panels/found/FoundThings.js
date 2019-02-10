@@ -9,6 +9,11 @@ import Icon24Place from "@vkontakte/icons/dist/24/place";
 import $ from "jquery";
 import AllOnMap from "../AllOnMap";
 import FilterFound from "./FilterFound";
+import Icon28Info from "@vkontakte/icons/dist/28/info_outline";
+import Icon28Write from "@vkontakte/icons/dist/28/write";
+import Icon28Cancel from "@vkontakte/icons/dist/28/cancel_outline";
+import MoreInfoFound from "./MoreInfoFound";
+import OnMapThing from "../OnMapThing";
 
 const google = window.google;
 
@@ -23,14 +28,19 @@ class FoundThings extends React.Component {
         this.state = {
             latSug: null,
             lngSug: null,
+            message: null,
             activePanel: "found",
             placeName: null,
-            found_nearby_array: null,
+            found_array: null,
+            popout: null,
             lat : props.coordinates === null ? 60.015659 : props.coordinates.lat,
             lng : props.coordinates === null ? 30.231652 : props.coordinates.long
         };
         this.onSuggestSelect = this.onSuggestSelect.bind(this);
         this.getNearbyFoundThings = this.getNearbyFoundThings.bind(this);
+        this.setFilteredArray = this.setFilteredArray.bind(this);
+        this.getMoreInfoAboutFoundThing = this.getMoreInfoAboutFoundThing.bind(this);
+        this.setPopout = this.setPopout.bind(this);
         this.getNearbyFoundThings(false);
     }
 
@@ -49,26 +59,53 @@ class FoundThings extends React.Component {
             lngSug: parseFloat(lng),
             placeName: place.description
         });
-        this.state.found_nearby_array = null;
+        this.state.found_array = null;
         this.getNearbyFoundThings(true);
     };
 
+    setFilteredArray(array) {
+        this.setState({found_array: array});
+    }
+
     getNearbyFoundThings(sug) {
+        var me = this;
+        this.state.message = null;
         $.ajax(
             {
-                url: 'https://degi.shn-host.ru/lostthings/getNearbyThings.php',
+                url: 'https://degi.shn-host.ru/lostthings/getNearbyLostThings.php',
                 type: 'GET',
                 dataType: "json",
                 data : {
-                    distance : 20,
+                    distance : 1,
                     lat: sug ? this.state.latSug : this.state.lat,
-                    lng: sug ? this.state.lngSug : this.state.lng
+                    lng: sug ? this.state.lngSug : this.state.lng,
+                    table: "found"
                 }
             }
         ).done(function (data) {
-            this.setState({found_nearby_array: data['result']})
+            this.setState({found_array: data['result']});
+            if (data['result'] === null) {
+                me.setState({message: "Возле этого места нет найденных вещей"});
+            }
         }.bind(this));
     };
+
+    go = (e) => {
+        this.setState({activePanel: e.currentTarget.dataset.to})
+    };
+
+    getMoreInfoAboutFoundThing(id, isMap) {
+        if (!isMap) {
+            this.setState({activePanel: 'moreInfoFound'})
+        } else {
+            this.setState({activePanel: 'onMap'})
+        }
+        this.state.pressId = id;
+    }
+
+    setPopout(alert) {
+        this.setState({popout: alert});
+    }
 
     printLostThingInfo(thing) {
         return <UI.Group>
@@ -77,10 +114,11 @@ class FoundThings extends React.Component {
                     before={<UI.Avatar src={thing.imageLink} type="image" size={72}/>}
                     size="l"
                     description={thing.category}
-                    bottomContent={
+                    asideContent={
                         <div style={{display: 'flex'}}>
-                            <UI.Button size="m">На карте</UI.Button>
-                            <UI.Button size="m" level="secondary" style={{marginLeft: 8}}>Подробности</UI.Button>
+                            <UI.Button size="s" level="outline" onClick={() => {
+                                this.getMoreInfoAboutFoundThing(thing._id, false);
+                            }}><Icon28Info/></UI.Button>
                         </div>
                     }>
                     {thing.name}
@@ -92,7 +130,7 @@ class FoundThings extends React.Component {
 
     render() {
         return (
-            <UI.View activePanel={this.state.activePanel}>
+            <UI.View popout = {this.state.popout} activePanel={this.state.activePanel}>
                 <UI.Panel id='found' style = {centerStyle}>
                     <UI.PanelHeader noShadow
                                     key="panelHeaderFound"
@@ -110,11 +148,14 @@ class FoundThings extends React.Component {
                         radius={20}
                     />
 
-                    {this.state.found_nearby_array !== null ? this.state.found_nearby_array.map(thing => this.printLostThingInfo(thing)) : <UI.Div>Ищем найденные вещи поблизости...<UI.Spinner/></UI.Div>}
+                    {this.state.found_array !== null ? this.state.found_array.map(thing => this.printLostThingInfo(thing)) : this.state.message ===null ? <UI.Div>Ищем найденные вещи поблизости...<UI.Spinner/></UI.Div>
+                    :<UI.Div>{this.state.message}</UI.Div>}
 
                 </UI.Panel>
+                <OnMapThing id="onMap" from = "found" uID={this.state.pressId} setPopout={this.setPopout} lostThingInfo={this.state.lostThingInfo} go={this.go}/>
+                <MoreInfoFound goToMap = {this.getMoreInfoAboutFoundThing} setPopout={this.setPopout} id="moreInfoFound" idThing={this.state.pressId} go={this.go}/>
                 <AllOnMap id="allOnMap" from = "found" setPanel = {this.setPanel}/>
-                <FilterFound id="filterFound" setPanel = {this.setPanel}/>
+                <FilterFound id="filterFound" setPanel = {this.setPanel} setFilteredArray = {this.setFilteredArray}/>
             </UI.View>
         )
     }
